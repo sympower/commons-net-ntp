@@ -17,10 +17,9 @@ package org.apache.commons.net.ntp;
  */
 
 
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
+import javax.microedition.io.Datagram;
+import java.io.IOException;
+import java.util.Vector;
 
 /**
  * Wrapper class to network time packet messages (NTP, etc) that computes
@@ -31,7 +30,7 @@ import java.util.List;
 public class TimeInfo {
 
     private final NtpV3Packet _message;
-    private List<String> _comments;
+    private Vector _comments;
     private Long _delay;
     private Long _offset;
 
@@ -64,7 +63,7 @@ public class TimeInfo {
      * @param comments List of errors/warnings identified during processing
      * @throws IllegalArgumentException if message is null
      */
-    public TimeInfo(NtpV3Packet message, long returnTime, List<String> comments)
+    public TimeInfo(NtpV3Packet message, long returnTime, Vector comments)
     {
             this(message, returnTime, comments, true);
     }
@@ -97,7 +96,7 @@ public class TimeInfo {
      * @param doComputeDetails  flag to pre-compute delay/offset values
      * @throws IllegalArgumentException if message is null
      */
-    public TimeInfo(NtpV3Packet message, long returnTime, List<String> comments,
+    public TimeInfo(NtpV3Packet message, long returnTime, Vector comments,
                    boolean doComputeDetails)
     {
         if (message == null) {
@@ -121,9 +120,9 @@ public class TimeInfo {
     public void addComment(String comment)
     {
         if (_comments == null) {
-            _comments = new ArrayList<String>();
+            _comments = new Vector();
         }
-        _comments.add(comment);
+        _comments.addElement(comment);
     }
 
     /**
@@ -137,7 +136,7 @@ public class TimeInfo {
         }
         _detailsComputed = true;
         if (_comments == null) {
-            _comments = new ArrayList<String>();
+            _comments = new Vector();
         }
 
         TimeStamp origNtpTime = _message.getOriginateTimeStamp();
@@ -173,20 +172,20 @@ public class TimeInfo {
             // might be via a broadcast NTP packet...
             if (xmitNtpTime.ntpValue() != 0)
             {
-                _offset = Long.valueOf(xmitTime - _returnTime);
-                _comments.add("Error: zero orig time -- cannot compute delay");
+                _offset = new Long(xmitTime - _returnTime);
+                _comments.addElement("Error: zero orig time -- cannot compute delay");
             } else {
-                _comments.add("Error: zero orig time -- cannot compute delay/offset");
+                _comments.addElement("Error: zero orig time -- cannot compute delay/offset");
             }
         } else if (rcvNtpTime.ntpValue() == 0 || xmitNtpTime.ntpValue() == 0) {
-            _comments.add("Warning: zero rcvNtpTime or xmitNtpTime");
+            _comments.addElement("Warning: zero rcvNtpTime or xmitNtpTime");
             // assert destTime >= origTime since network delay cannot be negative
             if (origTime > _returnTime) {
-                _comments.add("Error: OrigTime > DestRcvTime");
+                _comments.addElement("Error: OrigTime > DestRcvTime");
             } else {
                 // without receive or xmit time cannot figure out processing time
                 // so delay is simply the network travel time
-                _delay = Long.valueOf(_returnTime - origTime);
+                _delay = new Long(_returnTime - origTime);
             }
             // TODO: is offset still valid if rcvNtpTime=0 || xmitNtpTime=0 ???
             // Could always hash origNtpTime (sendTime) but if host doesn't set it
@@ -195,11 +194,11 @@ public class TimeInfo {
             if (rcvNtpTime.ntpValue() != 0)
             {
                 // xmitTime is 0 just use rcv time
-                _offset = Long.valueOf(rcvTime - origTime);
+                _offset = new Long(rcvTime - origTime);
             } else if (xmitNtpTime.ntpValue() != 0)
             {
                 // rcvTime is 0 just use xmitTime time
-                _offset = Long.valueOf(xmitTime - _returnTime);
+                _offset = new Long(xmitTime - _returnTime);
             }
         } else
         {
@@ -208,7 +207,7 @@ public class TimeInfo {
              if (xmitTime < rcvTime)
              {
                  // server cannot send out a packet before receiving it...
-                 _comments.add("Error: xmitTime < rcvTime"); // time-travel not allowed
+                 _comments.addElement("Error: xmitTime < rcvTime"); // time-travel not allowed
              } else
              {
                  // subtract processing time from round-trip network delay
@@ -227,20 +226,20 @@ public class TimeInfo {
                          // delayValue == 0 -> local clock saw no tick change but destination clock did
                          if (delayValue != 0)
                          {
-                             _comments.add("Info: processing time > total network time by 1 ms -> assume zero delay");
+                             _comments.addElement("Info: processing time > total network time by 1 ms -> assume zero delay");
                              delayValue = 0;
                          }
                      } else {
-                        _comments.add("Warning: processing time > total network time");
+                        _comments.addElement("Warning: processing time > total network time");
                     }
                  }
              }
-             _delay = Long.valueOf(delayValue);
+             _delay = new Long(delayValue);
             if (origTime > _returnTime) {
-                _comments.add("Error: OrigTime > DestRcvTime");
+                _comments.addElement("Error: OrigTime > DestRcvTime");
             }
 
-            _offset = Long.valueOf(((rcvTime - origTime) + (xmitTime - _returnTime)) / 2);
+            _offset = new Long(((rcvTime - origTime) + (xmitTime - _returnTime)) / 2);
         }
     }
 
@@ -249,7 +248,7 @@ public class TimeInfo {
      *
      * @return List or null if not yet computed
      */
-    public List<String> getComments()
+    public Vector getComments()
     {
         return _comments;
     }
@@ -287,11 +286,11 @@ public class TimeInfo {
 
     /**
      * Get host address from message datagram if available
-     * @return host address of available otherwise null
+     * @return host address if available otherwise null
      * @since 3.4
      */
-    public InetAddress getAddress() {
-        DatagramPacket pkt = _message.getDatagramPacket();
+    public String getAddress() throws IOException {
+        Datagram pkt = _message.getDatagramPacket();
         return pkt == null ? null : pkt.getAddress();
     }
 
@@ -316,7 +315,6 @@ public class TimeInfo {
      *          <code>false</code> otherwise.
      * @since 3.4
      */
-    @Override
     public boolean equals(Object obj)
     {
         if (this == obj) {
@@ -336,7 +334,6 @@ public class TimeInfo {
      * @return  a hash code value for this object.
      * @since 3.4
      */
-    @Override
     public int hashCode()
     {
         final int prime = 31;

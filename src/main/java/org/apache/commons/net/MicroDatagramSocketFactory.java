@@ -17,41 +17,43 @@
 
 package org.apache.commons.net;
 
+import javax.microedition.io.Connector;
 import javax.microedition.io.DatagramConnection;
 import java.io.IOException;
 
 /***
- * The DatagramSocketFactory interface provides a means for the
- * programmer to control the creation of datagram sockets and
- * provide his own DatagramSocket implementations for use by all
- * classes derived from
- * {@link org.apache.commons.net.DatagramSocketClient}
- * .
- * This allows you to provide your own DatagramSocket implementations and
- * to perform security checks or browser capability requests before
- * creating a DatagramSocket.
+ * MicroDatagramSocketFactory implements the DatagramSocketFactory
+ * interface by wrapping javax.microedition.io.Connector calls.
  *
- *
+ * @see DatagramSocketFactory
+ * @see DatagramSocketClient
+ * @see DatagramSocketClient#setDatagramSocketFactory
  ***/
-
-public interface DatagramSocketFactory
+public class MicroDatagramSocketFactory implements DatagramSocketFactory
 {
 
     /***
      * Creates a DatagramSocket on the local host at the first available port.
-     * @return the socket
-     *
+     * @return a new DatagramSocket
      * @exception IOException If the socket could not be created.
      ***/
-    public DatagramConnection createDatagramSocket() throws IOException;
+    public DatagramConnection createDatagramSocket() throws IOException
+    {
+        return (DatagramConnection) Connector.open("datagram://:", Connector.READ_WRITE, true);
+    }
 
     /***
-     * Creates a DatagramSocket on the local host at a specified port.
+     * Creates a DatagramSocket at a specified host and port.
      *
+     * @param host The host to use for the socket.
      * @param port The port to use for the socket.
-     * @return the socket
+     * @return a new DatagramSocket
      * @exception IOException If the socket could not be created.
      ***/
-    public DatagramConnection createDatagramSocket(String host, int port) throws IOException;
+    public DatagramConnection createDatagramSocket(String host, int port) throws IOException
+    {
+        return (DatagramConnection) Connector.open(
+          "datagram://" + host + ":" + port, Connector.READ_WRITE, true);
+    }
 
 }

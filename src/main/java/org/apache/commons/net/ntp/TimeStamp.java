@@ -18,10 +18,7 @@ package org.apache.commons.net.ntp;
 
 
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.TimeZone;
 
 /***
@@ -41,7 +38,7 @@ import java.util.TimeZone;
  * @version $Revision: 1741829 $
  * @see java.util.Date
  */
-public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
+public class TimeStamp
 {
     private static final long serialVersionUID = 8139806907588338737L;
 
@@ -56,20 +53,11 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
     protected static final long msb1baseTime = -2208988800000L;
 
     /**
-     * Default NTP date string format. E.g. Fri, Sep 12 2003 21:06:23.860.
-     * See <code>java.text.SimpleDateFormat</code> for code descriptions.
-     */
-    public static final String NTP_DATE_FORMAT = "EEE, MMM dd yyyy HH:mm:ss.SSS";
-
-    /**
      * NTP timestamp value: 64-bit unsigned fixed-point number as defined in RFC-1305
      * with high-order 32 bits the seconds field and the low-order 32-bits the
      * fractional field.
      */
     private final long ntpTime;
-
-    private DateFormat simpleFormatter;
-    private DateFormat utcFormatter;
 
     // initialization of static time bases
     /*
@@ -189,7 +177,7 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
         long fraction = ntpTimeValue & 0xffffffffL;             // low-order 32-bits
 
         // Use round-off on fractional part to preserve going to lower precision
-        fraction = Math.round(1000D * fraction / 0x100000000L);
+        fraction = MicroMath.round(1000D * fraction / 0x100000000L);
 
         /*
          * If the most significant bit (MSB) on the seconds field is set we use
@@ -316,7 +304,6 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
      *
      * @return  a hash code value for this object.
      */
-    @Override
     public int hashCode()
     {
         return (int) (ntpTime ^ (ntpTime >>> 32));
@@ -332,7 +319,6 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
      * @return  <code>true</code> if the objects are the same;
      *          <code>false</code> otherwise.
      */
-    @Override
     public boolean equals(Object obj)
     {
         if (obj instanceof TimeStamp) {
@@ -350,7 +336,6 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
      * @return NTP timestamp 64-bit long value as hex string with seconds
      * separated by fractional seconds.
      */
-    @Override
     public String toString()
     {
         return toString(ntpTime);
@@ -364,7 +349,7 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
      */
     private static void appendHexString(StringBuilder buf, long l)
     {
-        String s = Long.toHexString(l);
+        String s = MicroLong.toHexString(l);
         for (int i = s.length(); i < 8; i++) {
             buf.append('0');
         }
@@ -405,12 +390,7 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
      */
     public String toDateString()
     {
-        if (simpleFormatter == null) {
-            simpleFormatter = new SimpleDateFormat(NTP_DATE_FORMAT, Locale.US);
-            simpleFormatter.setTimeZone(TimeZone.getDefault());
-        }
-        Date ntpDate = getDate();
-        return simpleFormatter.format(ntpDate);
+        return MicroDateFormat.NTP.format(getDate());
     }
 
     /***
@@ -424,13 +404,7 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
      */
     public String toUTCString()
     {
-        if (utcFormatter == null) {
-            utcFormatter = new SimpleDateFormat(NTP_DATE_FORMAT + " 'UTC'",
-                    Locale.US);
-            utcFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        }
-        Date ntpDate = getDate();
-        return utcFormatter.format(ntpDate);
+        return MicroDateFormat.NTP_UTC.format(getDate());
     }
 
     /***
@@ -444,7 +418,6 @@ public class TimeStamp implements java.io.Serializable, Comparable<TimeStamp>
      *          numerically greater than the TimeStamp argument
      *          (signed comparison).
      */
-    @Override
     public int compareTo(TimeStamp anotherTimeStamp)
     {
         long thisVal = this.ntpTime;

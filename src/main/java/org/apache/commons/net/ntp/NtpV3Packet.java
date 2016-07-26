@@ -16,8 +16,8 @@ package org.apache.commons.net.ntp;
  * limitations under the License.
  */
 
-
-import java.net.DatagramPacket;
+import javax.microedition.io.Datagram;
+import java.io.IOException;
 
 /**
  * Interface for a NtpV3Packet with get/set methods corresponding to the fields
@@ -68,13 +68,13 @@ public interface NtpV3Packet
     /**
      * @return a datagram packet with the NTP parts already filled in
      */
-    public DatagramPacket getDatagramPacket();
+    public Datagram getDatagramPacket() throws IOException;
 
     /**
      * Set the contents of this object from the datagram packet
      * @param dp the packet
      */
-    public void setDatagramPacket(DatagramPacket dp);
+    public void setDatagramPacket(Datagram dp) throws IOException;
 
     /**
      * @return leap indicator as defined in RFC-1305

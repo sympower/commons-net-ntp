@@ -18,10 +18,10 @@ package org.apache.commons.net.ntp;
 
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
 
 import org.apache.commons.net.DatagramSocketClient;
+
+import javax.microedition.io.Datagram;
 
 /***
  * The NTPUDPClient class is a UDP implementation of a client for the
@@ -46,18 +46,37 @@ public final class NTPUDPClient extends DatagramSocketClient
     private int _version = NtpV3Packet.VERSION_3;
 
     /***
-     * Retrieves the time information from the specified server and port and
-     * returns it. The time is the number of miliiseconds since
+     * Opens a UDP socket to the specified server and default NTP port.
+     *
+     * @param host The address of the server.
+     * @exception IOException If an error occurs while opening the socket.
+     ***/
+    public void open(String host) throws IOException {
+        super.open(host, DEFAULT_PORT);
+    }
+
+    /***
+     * Opens a UDP socket to the specified server and port.
+     *
+     * @param host The address of the server.
+     * @param port The port of the server.
+     * @exception IOException If an error occurs while opening the socket.
+     ***/
+    public void open(String host, int port) throws IOException {
+        super.open(host, port);
+    }
+
+    /***
+     * Retrieves the time information and
+     * returns it. The time is the number of milliseconds since
      * 00:00 (midnight) 1 January 1900 UTC, as specified by RFC 1305.
      * This method reads the raw NTP packet and constructs a <i>TimeInfo</i>
      * object that allows access to all the fields of the NTP message header.
      * <p>
-     * @param host The address of the server.
-     * @param port The port of the service.
      * @return The time value retrieved from the server.
      * @exception IOException If an error occurs while retrieving the time.
      ***/
-    public TimeInfo getTime(InetAddress host, int port) throws IOException
+    public TimeInfo getTime() throws IOException
     {
         // if not connected then open to next available UDP port
         if (!isOpen())
@@ -65,15 +84,13 @@ public final class NTPUDPClient extends DatagramSocketClient
             open();
         }
 
-        NtpV3Packet message = new NtpV3Impl();
+        NtpV3Packet message = new NtpV3Impl(this);
         message.setMode(NtpV3Packet.MODE_CLIENT);
         message.setVersion(_version);
-        DatagramPacket sendPacket = message.getDatagramPacket();
-        sendPacket.setAddress(host);
-        sendPacket.setPort(port);
+        Datagram sendPacket = message.getDatagramPacket();
 
-        NtpV3Packet recMessage = new NtpV3Impl();
-        DatagramPacket receivePacket = recMessage.getDatagramPacket();
+        NtpV3Packet recMessage = new NtpV3Impl(this);
+        Datagram receivePacket = recMessage.getDatagramPacket();
 
         /*
          * Must minimize the time between getting the current time,
@@ -95,22 +112,6 @@ public final class NTPUDPClient extends DatagramSocketClient
         TimeInfo info = new TimeInfo(recMessage, returnTime, false);
 
         return info;
-    }
-
-    /***
-     * Retrieves the time information from the specified server on the
-     * default NTP port and returns it. The time is the number of miliiseconds
-     * since 00:00 (midnight) 1 January 1900 UTC, as specified by RFC 1305.
-     * This method reads the raw NTP packet and constructs a <i>TimeInfo</i>
-     * object that allows access to all the fields of the NTP message header.
-     * <p>
-     * @param host The address of the server.
-     * @return The time value retrieved from the server.
-     * @exception IOException If an error occurs while retrieving the time.
-     ***/
-    public TimeInfo getTime(InetAddress host) throws IOException
-    {
-        return getTime(host, NtpV3Packet.NTP_PORT);
     }
 
     /***

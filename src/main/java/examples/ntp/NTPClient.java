@@ -18,11 +18,8 @@ package examples.ntp;
 
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.text.NumberFormat;
 
+import org.apache.commons.net.ntp.MicroMath;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.NtpUtils;
 import org.apache.commons.net.ntp.NtpV3Packet;
@@ -46,8 +43,6 @@ import org.apache.commons.net.ntp.TimeStamp;
  ***/
 public final class NTPClient
 {
-
-    private static final NumberFormat numberFormat = new java.text.DecimalFormat("0.00");
 
     /**
      * Process <code>TimeInfo</code> object and print its details.
@@ -75,11 +70,11 @@ public final class NTPClient
         System.out.println(" mode: " + message.getModeName() + " (" + message.getMode() + ")");
         int poll = message.getPoll();
         // poll value typically btwn MINPOLL (4) and MAXPOLL (14)
-        System.out.println(" poll: " + (poll <= 0 ? 1 : (int) Math.pow(2, poll))
+        System.out.println(" poll: " + (poll <= 0 ? 1 : (int) MicroMath.pow(2, poll))
                 + " seconds" + " (2 ** " + poll + ")");
         double disp = message.getRootDispersionInMillisDouble();
-        System.out.println(" rootdelay=" + numberFormat.format(message.getRootDelayInMillisDouble())
-                + ", rootdispersion(ms): " + numberFormat.format(disp));
+        System.out.println(" rootdelay=" + message.getRootDelayInMillisDouble()
+                + ", rootdispersion(ms): " + disp);
 
         int refId = message.getReferenceId();
         String refAddr = NtpUtils.getHostAddress(refId);
@@ -92,18 +87,7 @@ public final class NTPClient
                 // defined in the form 127.127.clock-type.unit-num (e.g. 127.127.8.0 mode 5
                 // for GENERIC DCF77 AM; see refclock.htm from the NTP software distribution.
                 if (!refAddr.startsWith("127.127")) {
-                    try {
-                        InetAddress addr = InetAddress.getByName(refAddr);
-                        String name = addr.getHostName();
-                        if (name != null && !name.equals(refAddr)) {
-                            refName = name;
-                        }
-                    } catch (UnknownHostException e) {
-                        // some stratum-2 servers sync to ref clock device but fudge stratum level higher... (e.g. 2)
-                        // ref not valid host maybe it's a reference clock name?
-                        // otherwise just show the ref IP address.
-                        refName = NtpUtils.getReferenceClock(message);
-                    }
+                    refName = NtpUtils.getReferenceClock(message);
                 }
             } else if (version >= 3 && (stratum == 0 || stratum == 1)) {
                 refName = NtpUtils.getReferenceClock(message);
@@ -146,35 +130,26 @@ public final class NTPClient
                 + ", clock offset(ms)=" + offset); // offset in ms
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) throws IOException {
         if (args.length == 0) {
             System.err.println("Usage: NTPClient <hostname-or-address-list>");
             System.exit(1);
         }
 
         NTPUDPClient client = new NTPUDPClient();
-        // We want to timeout if a response takes longer than 10 seconds
-        client.setDefaultTimeout(10000);
-        try {
-            client.open();
-            for (String arg : args)
-            {
-                System.out.println();
-                try {
-                    InetAddress hostAddr = InetAddress.getByName(arg);
-                    System.out.println("> " + hostAddr.getHostName() + "/" + hostAddr.getHostAddress());
-                    TimeInfo info = client.getTime(hostAddr);
-                    processResponse(info);
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
+        for (int i = 0; i < args.length; i++)
+        {
+            client.open(args[i]);
+            System.out.println();
+            try {
+                TimeInfo info = client.getTime();
+                processResponse(info);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
             }
-        } catch (SocketException e) {
-            e.printStackTrace();
+            client.close();
         }
 
-        client.close();
     }
 
 }
