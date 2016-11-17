@@ -137,7 +137,7 @@ public class MicroDateFormat {
   private void appendDate(Calendar cal, StringBuffer sb) {
     leftPadWithZeros(sb, cal.get(Calendar.YEAR), 4);
     sb.append('-');
-    leftPadWithZeros(sb, cal.get(Calendar.MONTH), 2);
+    leftPadWithZeros(sb, cal.get(Calendar.MONTH) + 1, 2);
     sb.append('-');
     leftPadWithZeros(sb, cal.get(Calendar.DAY_OF_MONTH), 2);
   }
