@@ -79,7 +79,7 @@ jobs:
             # The fingerprint of GitHub's "CircleCI read-write key" Deploy Key
             - "77:57:15:fc:1e:6e:54:ff:1d:02:9e:ae:cd:56:f0:50"
       - run:
-          name: Release new version to Git and artifacts repository
+          name: Configure SSH known hosts and Git
           command: |
             echo "Setting up SSH known hosts for current user: $(whoami)"
             echo "  adding github.com"
@@ -92,9 +92,21 @@ jobs:
             echo "Setting up git user as: ${GIT_USER_NAME} <${GIT_USER_EMAIL}>"
             git config user.name "${GIT_USER_NAME}"
             git config user.email "${GIT_USER_EMAIL}"
-
+      - run:
+          name: Prepare and commit new release version and new development version pom.xml files to Git
+          command: |
             # skip tests because we assume they were already run by "build" job
-            mvn release:clean initialize release:prepare release:perform --batch-mode -Darguments="-DskipTests" --settings .circleci/.m2/settings.xml
+            mvn release:clean initialize release:prepare --batch-mode -Darguments="-DskipTests" --settings .circleci/.m2/settings.xml
+      - run:
+          name: Deploy new development version snapshot to artifacts repository
+          command: |
+            # skip tests because we assume they were already run by "build" job
+            mvn deploy -DskipTests --settings .circleci/.m2/settings.xml
+      - run:
+          name: Deploy release version to artifacts repository
+          command: |
+            # skip tests because we assume they were already run by "build" job
+            mvn release:perform --batch-mode -Darguments="-DskipTests" --settings .circleci/.m2/settings.xml
 workflows:
   version: 2
   build-and-deploy-snapshot-and-wait-release-approval: # on every commit/push
