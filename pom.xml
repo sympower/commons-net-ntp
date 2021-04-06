@@ -22,7 +22,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>commons-net-micro</groupId>
     <artifactId>commons-net-ntp</artifactId>
-    <version>3.5-5-SNAPSHOT</version>
+    <version>3.5-5</version>
     <!-- https://cwiki.apache.org/confluence/display/MAVENOLD/Versioning -->
     <!-- https://maven.apache.org/maven-ci-friendly.html -->
     <name>Apache Commons Net</name>
@@ -314,7 +314,7 @@ Apache Commons Net NTP library contains a NTP client.
       <url>https://github.com/sympower/commons-net-ntp</url>
       <connection>git@github.com:sympower/commons-net-ntp.git</connection>
       <developerConnection>scm:git:git@github.com:sympower/commons-net-ntp.git</developerConnection>
-      <tag>HEAD</tag>
+      <tag>commons-net-ntp-3.5-5</tag>
     </scm>
 
 </project>
