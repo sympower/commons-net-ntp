@@ -22,7 +22,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>commons-net-micro</groupId>
     <artifactId>commons-net-ntp</artifactId>
-    <version>3.5-5</version>
+    <version>3.5-5-SNAPSHOT</version>
     <!-- https://cwiki.apache.org/confluence/display/MAVENOLD/Versioning -->
     <!-- https://maven.apache.org/maven-ci-friendly.html -->
     <name>Apache Commons Net</name>
