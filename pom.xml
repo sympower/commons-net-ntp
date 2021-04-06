@@ -141,6 +141,7 @@ Apache Commons Net NTP library contains a NTP client.
             <groupId>com.cinterion</groupId>
             <artifactId>cldc</artifactId>
             <version>1.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
